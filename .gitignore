@@ -44,8 +44,8 @@ ENV/
 logs/
 
 # Data files (optional - uncomment jika tidak ingin commit data)
-# data/profiles/*.json
-# data/requirements/*.json
+data/profiles/*.json
+data/requirements/*.json
 
 # Test files
 .pytest_cache/
