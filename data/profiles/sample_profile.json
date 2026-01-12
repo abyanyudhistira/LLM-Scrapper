@@ -1,0 +1,33 @@
+{
+  "name": "Ahmad Rizki",
+  "headline": "Software Engineer | Python & Django Specialist",
+  "experiences": [
+    {
+      "title": "Backend Developer",
+      "company": "PT Teknologi Digital",
+      "duration_months": 30,
+      "description": "Mengembangkan REST API menggunakan Django dan PostgreSQL untuk sistem e-commerce"
+    },
+    {
+      "title": "Junior Developer",
+      "company": "Startup ABC",
+      "duration_months": 18,
+      "description": "Membangun web application dengan Python Flask"
+    }
+  ],
+  "skills": [
+    "Python",
+    "Django",
+    "PostgreSQL",
+    "REST API",
+    "Docker",
+    "Git"
+  ],
+  "education": [
+    {
+      "degree": "Sarjana Teknik Informatika",
+      "institution": "Universitas Indonesia",
+      "field_of_study": "Teknik Informatika"
+    }
+  ]
+}
