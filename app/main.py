@@ -4,6 +4,7 @@ from app.matcher.evaluate import evaluate_match
 from app.matcher.score import apply_threshold
 from app.trigger.send_message import send_linkedin_message
 from app.utils.logger import get_logger
+from app.utils.validators import validate_profile, validate_requirement
 
 logger = get_logger(__name__)
 
@@ -18,6 +19,17 @@ def process_candidate(profile_data: dict, requirement_data: dict) -> dict:
     Returns:
         dict: Hasil matching dengan informasi lengkap
     """
+    
+    # Validate input data
+    is_valid, message = validate_profile(profile_data)
+    if not is_valid:
+        logger.error(f"Invalid profile data: {message}")
+        raise ValueError(f"Invalid profile data: {message}")
+    
+    is_valid, message = validate_requirement(requirement_data)
+    if not is_valid:
+        logger.error(f"Invalid requirement data: {message}")
+        raise ValueError(f"Invalid requirement data: {message}")
     
     # 1. Normalisasi profil
     profile = normalize_profile(profile_data)

@@ -16,20 +16,24 @@ Sistem untuk mencocokkan profil LinkedIn dengan requirements lowongan pekerjaan 
 
 ```bash
 python -m pip install -r requirements.txt
+# atau
+make install
 ```
 
 ### 2. Setup API Key Gemini
 
 1. Dapatkan API Key dari [Google AI Studio](https://aistudio.google.com/apikey)
-2. Buat file `.env` di root project
-3. Isi dengan:
+2. Copy file `.env.example` menjadi `.env`
+3. Isi dengan API key Anda:
 
 ```env
 GEMINI_API_KEY=your_api_key_here
+GEMINI_MODEL=gemini-2.5-flash
 MATCH_THRESHOLD=50
+MAX_RETRIES=3
 ```
 
-**Model yang digunakan:** `gemini-2.5-flash`
+**Model yang digunakan:** `gemini-2.5-flash` (configurable)
 
 ## Cara Penggunaan
 
@@ -234,6 +238,24 @@ Detail Requirements:
 ┌─────────────┐
 │   Trigger   │ → Kirim pesan jika score ≥ threshold
 └─────────────┘
+```
+
+## Testing
+
+### Run Unit Tests
+
+```bash
+python -m pytest tests/ -v
+# atau
+make test
+```
+
+### Run Interactive Matching Test
+
+```bash
+python test_matching.py
+# atau
+make test-match
 ```
 
 ## Konfigurasi
