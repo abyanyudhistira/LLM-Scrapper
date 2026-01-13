@@ -44,8 +44,21 @@ def test_with_sample_data():
 
 
 # Contoh 2: Test dengan file JSON
-def test_with_json_files(profile_file, requirement_file):
+def test_with_json_files(profile_file=None, requirement_file=None):
     print(f"\n=== TEST 2: From JSON Files ===\n")
+    
+    # Jika tidak ada parameter, tampilkan pilihan file
+    if not profile_file:
+        profile_file = select_file_from_folder("data/profiles", "profil")
+        if not profile_file:
+            print("Tidak ada file profil yang dipilih.")
+            return
+    
+    if not requirement_file:
+        requirement_file = select_file_from_folder("data/requirements", "requirement")
+        if not requirement_file:
+            print("Tidak ada file requirement yang dipilih.")
+            return
     
     with open(profile_file, 'r', encoding='utf-8') as f:
         profile = json.load(f)
@@ -55,6 +68,43 @@ def test_with_json_files(profile_file, requirement_file):
     
     result = process_candidate(profile, requirement)
     print_result(result)
+
+
+def select_file_from_folder(folder_path, file_type):
+    """Tampilkan list file JSON di folder dan biarkan user pilih"""
+    import os
+    from pathlib import Path
+    
+    # Buat folder jika belum ada
+    Path(folder_path).mkdir(parents=True, exist_ok=True)
+    
+    # List semua file JSON di folder
+    files = [f for f in os.listdir(folder_path) if f.endswith('.json')]
+    
+    if not files:
+        print(f"\nTidak ada file JSON di folder '{folder_path}'")
+        print(f"Silakan tambahkan file {file_type} terlebih dahulu.")
+        return None
+    
+    print(f"\n=== Pilih File {file_type.title()} ===")
+    for i, file in enumerate(files, 1):
+        print(f"{i}. {file}")
+    
+    while True:
+        try:
+            choice = input(f"\nPilih nomor (1-{len(files)}): ")
+            idx = int(choice) - 1
+            if 0 <= idx < len(files):
+                selected_file = os.path.join(folder_path, files[idx])
+                print(f"✓ Dipilih: {files[idx]}")
+                return selected_file
+            else:
+                print(f"Pilih nomor antara 1-{len(files)}")
+        except ValueError:
+            print("Input tidak valid. Masukkan nomor.")
+        except KeyboardInterrupt:
+            print("\nDibatalkan.")
+            return None
 
 
 # Contoh 3: Test dengan input manual
@@ -118,20 +168,24 @@ def print_result(result):
 if __name__ == "__main__":
     import sys
     
-    print("PILIH MODE TEST:")
-    print("1. Test dengan sample data")
-    print("2. Test dengan file JSON")
+    print("="*60)
+    print("  LINKEDIN PROFILE MATCHER - TESTING TOOL")
+    print("="*60)
+    print("\nPILIH MODE TEST:")
+    print("1. Test dengan sample data (quick test)")
+    print("2. Test dengan file JSON (pilih dari folder)")
     print("3. Test dengan input manual")
+    print("0. Keluar")
     
-    choice = input("\nPilih (1/2/3): ")
+    choice = input("\nPilih (0/1/2/3): ")
     
     if choice == "1":
         test_with_sample_data()
     elif choice == "2":
-        profile_file = input("Path file profil JSON: ")
-        requirement_file = input("Path file requirement JSON: ")
-        test_with_json_files(profile_file, requirement_file)
+        test_with_json_files()
     elif choice == "3":
         test_with_manual_input()
+    elif choice == "0":
+        print("Keluar.")
     else:
         print("Pilihan tidak valid")
