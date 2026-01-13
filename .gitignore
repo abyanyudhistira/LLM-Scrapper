@@ -43,6 +43,9 @@ ENV/
 *.log
 logs/
 
+# Cache
+cache/
+
 # Data files (optional - uncomment jika tidak ingin commit data)
 data/profiles/*.json
 data/requirements/*.json

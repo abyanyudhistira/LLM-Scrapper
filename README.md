@@ -258,6 +258,53 @@ python test_matching.py
 make test-match
 ```
 
+### Run Batch Processing Test
+
+```bash
+python test_batch.py
+```
+
+Process multiple kandidat sekaligus dengan parallel processing.
+
+## Performance Optimizations
+
+### 1. Caching
+
+Sistem otomatis cache hasil matching untuk mengurangi API calls:
+
+```python
+# Cache otomatis aktif
+result = process_candidate(profile, requirement)  # API call
+
+# Request kedua menggunakan cache (no API call)
+result = process_candidate(profile, requirement)  # From cache
+```
+
+Cache valid selama 24 jam. Untuk disable cache:
+
+```python
+result = process_candidate(profile, requirement, use_cache=False)
+```
+
+### 2. Batch Processing
+
+Process multiple kandidat secara parallel:
+
+```python
+from app.batch_processor import process_candidates_batch
+
+profiles = [profile1, profile2, profile3, ...]
+results = process_candidates_batch(profiles, requirement, max_workers=3)
+
+# Get top candidates
+from app.batch_processor import get_top_candidates
+top_5 = get_top_candidates(results, top_n=5)
+```
+
+### 3. Optimized Prompt
+
+Prompt sudah dioptimasi untuk mengurangi token usage (~60% lebih ringkas) tanpa mengurangi akurasi.
+
 ## Konfigurasi
 
 ### Threshold Matching

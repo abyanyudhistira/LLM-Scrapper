@@ -4,65 +4,36 @@ from app.schemas.requirement_schema import JobRequirement
 def create_matching_prompt(profile: LinkedInProfile, requirement: JobRequirement) -> str:
     """Buat prompt untuk matching profil dengan requirements"""
     
-    prompt = f"""Kamu adalah sistem penilaian kecocokan kandidat untuk lowongan pekerjaan.
-
-PROFIL KANDIDAT:
-Nama: {profile.name}
-Headline: {profile.headline or "Tidak ada"}
-Total Pengalaman: {profile.total_experience_months // 12} tahun {profile.total_experience_months % 12} bulan
-
-Pengalaman Kerja:
-"""
-    
+    # Ringkas pengalaman
+    exp_summary = []
     for exp in profile.experiences:
-        prompt += f"- {exp.title} di {exp.company} ({exp.duration_months} bulan)\n"
-        if exp.description:
-            prompt += f"  Deskripsi: {exp.description}\n"
+        years = exp.duration_months / 12
+        exp_summary.append(f"- {exp.title} ({years:.1f}y)")
     
-    prompt += f"\nSkills: {', '.join(profile.skills)}\n\n"
-    
-    prompt += "Pendidikan:\n"
-    for edu in profile.education:
-        prompt += f"- {edu.degree} dari {edu.institution}"
-        if edu.field_of_study:
-            prompt += f" ({edu.field_of_study})"
-        prompt += "\n"
-    
-    prompt += f"""
-REQUIREMENTS LOWONGAN:
+    prompt = f"""Nilai kecocokan kandidat untuk lowongan (0-100).
+
+KANDIDAT:
+Nama: {profile.name}
+Total Exp: {profile.total_experience_months // 12}y {profile.total_experience_months % 12}m
+Posisi: {profile.headline or "N/A"}
+Riwayat: {', '.join(exp_summary)}
+Skills: {', '.join(profile.skills[:10])}  # Limit 10 skills
+Pendidikan: {profile.education[0].degree if profile.education else "N/A"}
+
+LOWONGAN:
 Posisi: {requirement.job_title}
-Perusahaan: {requirement.company_name}
-Minimal Pengalaman: {requirement.min_experience_years} tahun
-Skills yang Dibutuhkan: {', '.join(requirement.required_skills)}
-Pendidikan yang Diinginkan: {', '.join(requirement.preferred_education) if requirement.preferred_education else 'Tidak disebutkan'}
-"""
-    
-    if requirement.job_description:
-        prompt += f"Deskripsi Pekerjaan: {requirement.job_description}\n"
-    
-    prompt += """
-TUGAS:
-Nilai kecocokan kandidat dengan lowongan ini dalam skala 0-100. Berikan output dalam format JSON berikut:
+Min Exp: {requirement.min_experience_years}y
+Skills: {', '.join(requirement.required_skills)}
 
-{
-  "score": <angka 0-100>,
+OUTPUT (JSON only):
+{{
+  "score": <0-100>,
   "matched_requirements": [
-    {
-      "requirement": "<nama requirement>",
-      "status": "terpenuhi" atau "tidak_terpenuhi",
-      "explanation": "<penjelasan singkat>"
-    }
+    {{"requirement": "<skill/exp>", "status": "terpenuhi/tidak_terpenuhi", "explanation": "<singkat>"}}
   ],
-  "summary": "<ringkasan penilaian keseluruhan>"
-}
+  "summary": "<1-2 kalimat>"
+}}
 
-Pertimbangkan:
-1. Kecocokan skills (semantik, tidak harus exact match)
-2. Pengalaman kerja yang relevan
-3. Latar belakang pendidikan
-4. Total tahun pengalaman
-
-Berikan penilaian objektif berdasarkan data yang tersedia.
-"""
+Pertimbangkan: skill match (semantik), pengalaman relevan, total tahun kerja."""
     
     return prompt

@@ -5,20 +5,30 @@ from app.matcher.score import apply_threshold
 from app.trigger.send_message import send_linkedin_message
 from app.utils.logger import get_logger
 from app.utils.validators import validate_profile, validate_requirement
+from app.utils.cache import get_cache_key, get_cached_result, save_to_cache
 
 logger = get_logger(__name__)
 
-def process_candidate(profile_data: dict, requirement_data: dict) -> dict:
+def process_candidate(profile_data: dict, requirement_data: dict, use_cache: bool = True) -> dict:
     """
     Proses utama: matching kandidat dengan lowongan
     
     Args:
         profile_data: Data profil LinkedIn (dict)
         requirement_data: Data requirements lowongan (dict)
+        use_cache: Use cached result if available (default: True)
     
     Returns:
         dict: Hasil matching dengan informasi lengkap
     """
+    
+    # Check cache first
+    if use_cache:
+        cache_key = get_cache_key(profile_data, requirement_data)
+        cached_result = get_cached_result(cache_key)
+        if cached_result:
+            logger.info(f"Using cached result for {profile_data.get('name', 'Unknown')}")
+            return cached_result
     
     # Validate input data
     is_valid, message = validate_profile(profile_data)
@@ -72,6 +82,12 @@ Apakah Anda tertarik untuk mendiskusikan lebih lanjut?
         "matched_requirements": [req.model_dump() for req in result.matched_requirements],
         "summary": result.summary
     }
+    
+    # Save to cache
+    if use_cache:
+        save_to_cache(cache_key, output)
+    
+    return output
 
 if __name__ == "__main__":
     # Contoh penggunaan
