@@ -1,359 +1,151 @@
 # LinkedIn Profile Matcher
 
-Sistem untuk mencocokkan profil LinkedIn dengan requirements lowongan pekerjaan menggunakan Gemini AI.
+Sistem hybrid matching kandidat dengan job requirements menggunakan Rule-based + Embedding + LLM untuk evaluasi yang akurat dan efisien.
 
-## Fitur
+## 🚀 Fitur Utama
 
-- Normalisasi data profil LinkedIn
-- Matching semantik menggunakan LLM (Gemini 2.5 Flash)
-- Scoring otomatis (0-100)
-- Trigger pengiriman pesan berdasarkan threshold
-- Detail requirements yang terpenuhi/tidak terpenuhi
+### 1. HTML Cleaning & Extraction
+- Parse HTML LinkedIn profile dengan BeautifulSoup
+- Extract structured data (name, skills, experience, education)
+- Convert ke format schema untuk matching
 
-## Setup
+### 2. Hybrid Matching System
+- **Rule-based**: Fast filtering berdasarkan experience, skills, education
+- **Embedding**: Semantic similarity matching (optional)
+- **LLM**: Detailed evaluation dengan Gemini AI (optional)
 
-### 1. Install Dependencies
+### 3. Flexible Modes
+- **Fast Mode**: Rule-based only (~10ms per candidate)
+- **Balanced Mode**: Rule + Embedding (~100ms per candidate)
+- **Full Mode**: Rule + Embedding + LLM (~2-3s per candidate)
 
-```bash
-python -m pip install -r requirements.txt
-# atau
-make install
-```
-
-### 2. Setup API Key Gemini
-
-1. Dapatkan API Key dari [Google AI Studio](https://aistudio.google.com/apikey)
-2. Copy file `.env.example` menjadi `.env`
-3. Isi dengan API key Anda:
-
-```env
-GEMINI_API_KEY=your_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
-MATCH_THRESHOLD=50
-MAX_RETRIES=3
-```
-
-**Model yang digunakan:** `gemini-2.5-flash` (configurable)
-
-## Cara Penggunaan
-
-### Opsi 1: Test dengan Script Interaktif (Recommended)
+## 📦 Installation
 
 ```bash
-python test_matching.py
+# Install dependencies
+pip install -r requirements.txt
+
+# Setup environment
+cp .env.example .env
+# Edit .env dan isi GEMINI_API_KEY
 ```
 
-Pilih mode test:
-- **Mode 1**: Test dengan sample data (langsung jalan)
-- **Mode 2**: Test dengan file JSON
-- **Mode 3**: Input manual via terminal
+## 🎯 Quick Start
 
-### Opsi 2: Test dengan File JSON
+### 1. Clean LinkedIn HTML
 
-1. Buat file profil di `data/profiles/your_profile.json`:
-
-```json
-{
-  "name": "Ahmad Rizki",
-  "headline": "Software Engineer",
-  "experiences": [
-    {
-      "title": "Backend Developer",
-      "company": "PT Tech",
-      "duration_months": 30,
-      "description": "Develop REST API with Django"
-    }
-  ],
-  "skills": ["Python", "Django", "PostgreSQL"],
-  "education": [
-    {
-      "degree": "Sarjana Teknik Informatika",
-      "institution": "Universitas Indonesia"
-    }
-  ]
-}
-```
-
-2. Buat file requirement di `data/requirements/your_job.json`:
-
-```json
-{
-  "job_title": "Senior Backend Developer",
-  "company_name": "PT Maju Bersama",
-  "required_skills": ["Python", "Django", "PostgreSQL"],
-  "min_experience_years": 3,
-  "job_description": "Mencari backend developer berpengalaman"
-}
-```
-
-3. Jalankan test:
+Simpan HTML LinkedIn profile ke file, lalu jalankan:
 
 ```bash
-python test_matching.py
+python clean_linkedin_v2.py
 ```
 
-Pilih opsi 2, lalu masukkan path file JSON.
+Output: `data/profiles/linkedin_profile_schema.json`
 
-### Opsi 3: Gunakan di Code Python
+### 2. Match Profile dengan Requirement
 
 ```python
-from app.main import process_candidate
+from app.schemas.profile_schema import LinkedInProfile
+from app.schemas.requirement_schema import JobRequirement
+from app.matcher.hybrid import get_hybrid_matcher
+import json
 
-profile_data = {
-    "name": "John Doe",
-    "headline": "Senior Software Engineer",
-    "experiences": [
-        {
-            "title": "Senior Developer",
-            "company": "Tech Corp",
-            "duration_months": 36,
-            "description": "Built REST APIs"
-        }
-    ],
-    "skills": ["Python", "Django", "PostgreSQL"],
-    "education": [
-        {
-            "degree": "Bachelor of Computer Science",
-            "institution": "University ABC"
-        }
-    ]
-}
+# Load profile
+with open('data/profiles/linkedin_profile_schema.json', 'r') as f:
+    profile_data = json.load(f)
+profile = LinkedInProfile(**profile_data)
 
-requirement_data = {
-    "job_title": "Senior Backend Developer",
-    "company_name": "PT Teknologi Maju",
-    "required_skills": ["Python", "Django"],
-    "min_experience_years": 3
-}
+# Create requirement
+requirement = JobRequirement(
+    job_title="Senior Backend Engineer",
+    company_name="Tech Company",
+    required_skills=["Golang", "AWS", "PostgreSQL"],
+    min_experience_years=3
+)
 
-result = process_candidate(profile_data, requirement_data)
+# Match (Fast Mode)
+matcher = get_hybrid_matcher(use_embedding=False, use_llm=False)
+result = matcher.match(profile, requirement)
 
-print(f"Score: {result['score']}/100")
-print(f"Should send message: {result['should_send_message']}")
-print(f"Summary: {result['summary']}")
+print(f"Score: {result.score}/100")
+print(f"Decision: {'SEND MESSAGE' if result.should_send_message else 'SKIP'}")
 ```
 
-### Opsi 4: Run Example Bawaan
-
-```bash
-python -m app.main
-```
-
-## Output Format
-
-Sistem akan menghasilkan output seperti ini:
+## 📁 Struktur Project
 
 ```
-=== HASIL MATCHING ===
-Kandidat: Ahmad Rizki
-Posisi: Senior Backend Developer
-Score: 85/100
-Kirim Pesan: Ya
-
-Summary: Kandidat memiliki pengalaman yang relevan dengan posisi yang dibutuhkan...
-
-Detail Requirements:
-✓ Python: Kandidat memiliki skill Python dengan pengalaman 4 tahun
-✓ Django: Terbukti dari pengalaman kerja di PT Teknologi Digital
-✓ PostgreSQL: Disebutkan dalam skills dan pengalaman
-✗ Min 5 tahun pengalaman: Kandidat hanya memiliki 4 tahun pengalaman
+├── app/
+│   ├── matcher/          # Matching system
+│   │   ├── rule_based.py    # Rule-based filtering
+│   │   ├── embedding.py     # Semantic matching
+│   │   ├── evaluate.py      # LLM evaluation
+│   │   └── hybrid.py        # Hybrid matcher
+│   ├── schemas/          # Pydantic schemas
+│   ├── llm/              # Gemini AI integration
+│   └── utils/
+│       ├── html_cleaner.py  # HTML cleaning utilities
+│       └── cache.py         # Caching
+├── data/
+│   ├── profiles/         # Candidate profiles
+│   └── requirements/     # Job requirements
+├── clean_linkedin_v2.py  # LinkedIn HTML cleaner
+└── requirements.txt      # Dependencies
 ```
 
-## Struktur Data
+## 📖 Documentation
 
-### Profile Data (Input)
-```json
-{
-  "name": "string (required)",
-  "headline": "string (optional)",
-  "experiences": [
-    {
-      "title": "string (required)",
-      "company": "string (required)",
-      "duration_months": "number (required)",
-      "description": "string (optional)"
-    }
-  ],
-  "skills": ["string array (required)"],
-  "education": [
-    {
-      "degree": "string (required)",
-      "institution": "string (required)",
-      "field_of_study": "string (optional)"
-    }
-  ]
-}
-```
+- [MATCHING_SYSTEM.md](MATCHING_SYSTEM.md) - Detailed matching system architecture
+- [HOW_TO_USE_HTML_CLEANER.md](HOW_TO_USE_HTML_CLEANER.md) - HTML cleaner guide
 
-### Requirement Data (Input)
-```json
-{
-  "job_title": "string (required)",
-  "company_name": "string (required)",
-  "required_skills": ["string array (required)"],
-  "min_experience_years": "number (optional, default: 0)",
-  "preferred_education": ["string array (optional)"],
-  "job_description": "string (optional)"
-}
-```
+## 🔧 Configuration
 
-### Result Data (Output)
-```json
-{
-  "candidate_name": "string",
-  "job_title": "string",
-  "score": "number (0-100)",
-  "should_send_message": "boolean",
-  "message_sent": "boolean",
-  "matched_requirements": [
-    {
-      "requirement": "string",
-      "status": "terpenuhi | tidak_terpenuhi",
-      "explanation": "string"
-    }
-  ],
-  "summary": "string"
-}
-```
-
-## Alur Kerja Sistem
-
-```
-┌─────────────┐
-│   Crawler   │ → Ambil data profil LinkedIn (implementasi disesuaikan)
-└──────┬──────┘
-       ↓
-┌─────────────┐
-│ Normalizer  │ → Standarisasi format data profil
-└──────┬──────┘
-       ↓
-┌─────────────┐
-│ LLM Matcher │ → Gemini 2.5 Flash menilai kecocokan semantik
-└──────┬──────┘
-       ↓
-┌─────────────┐
-│   Scoring   │ → Hitung score (0-100) & apply threshold (≥50)
-└──────┬──────┘
-       ↓
-┌─────────────┐
-│   Trigger   │ → Kirim pesan jika score ≥ threshold
-└─────────────┘
-```
-
-## Testing
-
-### Run Unit Tests
-
-```bash
-python -m pytest tests/ -v
-# atau
-make test
-```
-
-### Run Interactive Matching Test
-
-```bash
-python test_matching.py
-# atau
-make test-match
-```
-
-### Run Batch Processing Test
-
-```bash
-python test_batch.py
-```
-
-Process multiple kandidat sekaligus dengan parallel processing.
-
-## Performance Optimizations
-
-### 1. Caching
-
-Sistem otomatis cache hasil matching untuk mengurangi API calls:
+Edit `app/utils/config.py`:
 
 ```python
-# Cache otomatis aktif
-result = process_candidate(profile, requirement)  # API call
+# Matching thresholds
+MATCH_THRESHOLD = 70          # Minimum score untuk send message
+RULE_BASED_THRESHOLD = 30     # Minimum untuk lanjut ke LLM
 
-# Request kedua menggunakan cache (no API call)
-result = process_candidate(profile, requirement)  # From cache
+# Scoring weights (Full mode)
+RULE_WEIGHT = 0.3
+EMBEDDING_WEIGHT = 0.2
+LLM_WEIGHT = 0.5
 ```
 
-Cache valid selama 24 jam. Untuk disable cache:
+## 🧪 Testing
 
-```python
-result = process_candidate(profile, requirement, use_cache=False)
-```
-
-### 2. Batch Processing
-
-Process multiple kandidat secara parallel:
-
-```python
-from app.batch_processor import process_candidates_batch
-
-profiles = [profile1, profile2, profile3, ...]
-results = process_candidates_batch(profiles, requirement, max_workers=3)
-
-# Get top candidates
-from app.batch_processor import get_top_candidates
-top_5 = get_top_candidates(results, top_n=5)
-```
-
-### 3. Optimized Prompt
-
-Prompt sudah dioptimasi untuk mengurangi token usage (~60% lebih ringkas) tanpa mengurangi akurasi.
-
-## Konfigurasi
-
-### Threshold Matching
-
-Edit di file `.env`:
-
-```env
-MATCH_THRESHOLD=50  # Default: 50, Range: 0-100
-```
-
-- Score ≥ threshold → Sistem akan trigger pengiriman pesan
-- Score < threshold → Tidak ada aksi
-
-### Ganti Model Gemini
-
-Edit di `app/llm/gemini_client.py`:
-
-```python
-self.model = genai.GenerativeModel("gemini-2.5-flash")  # Ganti model di sini
-```
-
-Model yang tersedia:
-- `gemini-2.5-flash` (Recommended, cepat & akurat)
-- `gemini-1.5-pro` (Lebih detail, lebih lambat)
-- `gemini-1.5-flash` (Cepat, akurasi standar)
-
-## Troubleshooting
-
-### Error: API Key Invalid
-- Pastikan API key benar di file `.env`
-- Generate key baru di [Google AI Studio](https://aistudio.google.com/apikey)
-
-### Error: Quota Exceeded
-- Model tertentu (seperti `gemini-2.5-pro`) tidak tersedia di free tier
-- Gunakan `gemini-2.5-flash` atau `gemini-1.5-flash`
-
-### Error: Module Not Found
 ```bash
-python -m pip install -r requirements.txt
+# Run tests
+pytest tests/
+
+# Test specific module
+pytest tests/test_normalizer.py
 ```
 
-## Catatan Penting
+## 📊 Performance
 
-- ✅ Sistem ini hanya melakukan **penilaian**, bukan keputusan akhir
-- ✅ LLM digunakan untuk **matching semantik**, bukan exact match
-- ✅ Threshold default: **50** (dapat diubah di `.env`)
-- ⚠️ Implementasi **crawler LinkedIn** perlu disesuaikan dengan tools Anda
-- ⚠️ Implementasi **pengiriman pesan** perlu disesuaikan dengan tools Anda
+| Mode | Speed | Accuracy | Use Case |
+|------|-------|----------|----------|
+| Fast (Rule only) | ⚡⚡⚡ ~10ms | ⭐⭐ Basic | Batch screening |
+| Balanced (Rule + Embedding) | ⚡⚡ ~100ms | ⭐⭐⭐ Good | Balanced |
+| Full (+ LLM) | ⚡ ~2-3s | ⭐⭐⭐⭐ Best | Final decision |
 
-## Lisensi
+## 🎯 Workflow
+
+```
+HTML LinkedIn Profile
+    ↓
+[BeautifulSoup Cleaning] → Structured Data
+    ↓
+[Rule-based Filter] → Quick filtering (30-40% weight)
+    ↓
+[Embedding Matching] → Semantic similarity (20% weight)
+    ↓
+[LLM Evaluation] → Detailed reasoning (50% weight)
+    ↓
+Final Score & Decision
+```
+
+## 📝 License
 
 MIT License
