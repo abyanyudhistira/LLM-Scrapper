@@ -26,39 +26,48 @@ env/
 ENV/
 .venv
 
-# Environment Variables
-.env
-.env.local
-.env.*.local
-
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-.DS_Store
 
-# Logs
-*.log
-logs/
+# Environment
+.env
+.env.local
+.env.production
 
 # Cache
 cache/
-
-# Data files (optional - uncomment jika tidak ingin commit data)
-data/profiles/*.json
-data/requirements/*.json
-
-# Test files
+*.cache
 .pytest_cache/
+
+# Logs
+logs/*.log
+*.log
+worker.log
+nohup.out
+
+# Data
+data/raw_html/*.html
+data/raw_html/processed/
+data/profiles/*.json
+data/results/*.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
 .coverage
 htmlcov/
+.tox/
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# Docker
+.dockerignore
+docker-compose.override.yml
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+# Backup
+*.sql
+backup/

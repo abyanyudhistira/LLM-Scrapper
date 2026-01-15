@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # RabbitMQ Message Queue
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: profile-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - profile-network
+
+  # Profile Processing Worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    image: profile-worker:latest
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+      - ./cache:/app/cache
+    restart: unless-stopped
+    networks:
+      - profile-network
+
+volumes:
+  rabbitmq_data:
+
+networks:
+  profile-network:
+    driver: bridge

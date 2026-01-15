@@ -10,6 +10,7 @@ from app.matcher.rule_based import rule_based_scoring, should_use_llm
 from app.matcher.embedding import get_embedding_matcher
 from app.matcher.evaluate import evaluate_match
 from app.utils.logger import get_logger
+from app.utils.config import MATCH_THRESHOLD
 
 logger = get_logger(__name__)
 
@@ -163,7 +164,7 @@ class HybridMatcher:
             score=final_score,
             matched_requirements=matched_reqs,
             summary=f"Kandidat memiliki score {final_score}/100 berdasarkan rule-based dan embedding analysis",
-            should_send_message=final_score >= 70
+            should_send_message=final_score >= MATCH_THRESHOLD
         )
 
 

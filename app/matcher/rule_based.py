@@ -7,6 +7,7 @@ from typing import List, Dict, Tuple
 from app.schemas.profile_schema import LinkedInProfile
 from app.schemas.requirement_schema import JobRequirement
 from app.utils.logger import get_logger
+from app.utils.config import RULE_BASED_THRESHOLD
 
 logger = get_logger(__name__)
 
@@ -140,10 +141,10 @@ def rule_based_scoring(profile: LinkedInProfile, requirement: JobRequirement) ->
     }
     results['total_score'] += edu_score
     
-    # Threshold check (misalnya 50)
-    results['passed_threshold'] = results['total_score'] >= 50
+    # Threshold check
+    results['passed_threshold'] = results['total_score'] >= RULE_BASED_THRESHOLD
     
-    logger.info(f"Rule-based score: {results['total_score']}/100")
+    logger.info(f"Rule-based score: {results['total_score']}/100 (threshold: {RULE_BASED_THRESHOLD})")
     
     return results
 

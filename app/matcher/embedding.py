@@ -75,7 +75,8 @@ class EmbeddingMatcher:
             max_sim_idx = np.argmax(similarity_matrix[i])
             max_similarity = similarity_matrix[i][max_sim_idx]
             
-            if max_similarity > 0.5:  # Threshold untuk dianggap match
+            from app.utils.config import EMBEDDING_SIMILARITY_THRESHOLD
+            if max_similarity > EMBEDDING_SIMILARITY_THRESHOLD:  # Threshold untuk dianggap match
                 matches.append((
                     profile_skills[max_sim_idx],
                     req_skill,
